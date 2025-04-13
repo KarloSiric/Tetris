@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 20:27:11
+* @Last Modified time: 2025-04-13 21:06:53
 */
 
 
@@ -19,7 +19,7 @@
 #include <errno.h>
 
 // here I define some macros that I will be using in the game
-#define BOARD_WIDTH 10
+#define BOARD_WIDTH 20
 #define BOARD_HEIGHT 20
 #define EMPTY_CELL ' '
 #define FILLED_CELL '#'
@@ -110,6 +110,8 @@ int keybit() {
     */
     if (bytes == 1) {
         return 1;
+    } else if (bytes == -1 && errno == EAGAIN) {
+        return 0;
     } else {
         perror("Error reading correct number of bytes");
         return EXIT_FAILURE;
@@ -128,9 +130,9 @@ char board[BOARD_HEIGHT][BOARD_WIDTH];
 
 // now we initialize that board and set it all to empty, we populate the board
 void initBoard() {
-    for (int x = 0; x < BOARD_HEIGHT; x++) {
-        for (int y = 0; y < BOARD_WIDTH; y++) {
-            board[x][y] = EMPTY_CELL;
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            board[y][x] = EMPTY_CELL;
         }
     }
 }
@@ -392,6 +394,8 @@ void createTetronino(s_Tetromino *tetromino) {
     tetromino->rotation = 0; // initially it is set to 0
     tetromino->x = BOARD_WIDTH / 2 - 2; // this is needed in order to center the tetromino whichever we will be using.
     tetromino->y = 0; // we start at the very top of the board
+    // for debugging
+    printf("Created tetromino: type=%d, x=%d, y=%d\n", tetromino->type, tetromino->x, tetromino->y);
 }
 
 // we also need a function which checks whether this tetromino is in the right position
@@ -399,7 +403,7 @@ bool is_in_valid_position(s_Tetromino *tetromino) {
     for (int x = 0; x < 4; x++) {
         for (int y = 0; y < 4; y++) {
             // we make a tetromino and we check if this one exists
-            if (TETROMINO_SHAPE[tetromino->type][tetromino->rotation][tetromino->x][tetromino->y]) { // if it is a valid one, type and rotation will be passed when we create the piece
+            if (TETROMINO_SHAPE[tetromino->type][tetromino->rotation][y][x]) { // if it is a valid one, type and rotation will be passed when we create the piece
                 int boardX = tetromino->x + x;
                 int boardY = tetromino->y + y;
                 // we check if it is outside of the board and so forth...
@@ -407,7 +411,7 @@ bool is_in_valid_position(s_Tetromino *tetromino) {
                     return false;
                 }
                 // now we check if it is overlapping with some existing blocks on the board already
-                if (board[boardX][boardY] != EMPTY_CELL) {
+                if (board[boardY][boardX] != EMPTY_CELL) {
                     return false; // position is invalid, we have a collision
                 }
             }
@@ -453,8 +457,9 @@ bool moveTetrominoRight(s_Tetromino *tetromino) {
 bool rotateTetromino(s_Tetromino *tetromino) {
     int defaultRotation = tetromino->rotation; // this is the rotation that we have once the tetromino spawns
     int newRotation = (tetromino->rotation + 1) % 4; // since we have 4 rotations this ensures that we get a new one, so for example this let's us get rotations from 0 to 3
+    tetromino->rotation = newRotation;
     if (!is_in_valid_position(tetromino)) {
-        newRotation = defaultRotation;
+        tetromino->rotation = defaultRotation;
         return false;
     }
 
@@ -464,10 +469,10 @@ bool rotateTetromino(s_Tetromino *tetromino) {
 void placeTetromino(s_Tetromino *tetromino) {
     for (int x = 0; x < 4; x++) {
         for (int y = 0; y < 4; y++) {
-            if(TETROMINO_SHAPE[tetromino->type][tetromino->rotation][x][y]) {
+            if(TETROMINO_SHAPE[tetromino->type][tetromino->rotation][y][x]) {
                 int boardX = tetromino->x + x;
                 int boardY = tetromino->y + y;
-                board[boardY][boardX];
+                board[boardY][boardX] = FILLED_CELL; // adding this correction, was wrong before
             }
         }
     }
@@ -485,18 +490,18 @@ void displayGame(s_Tetromino *tetromino) {
     // we make a copy of the board now
     for (int i = 0; i < BOARD_HEIGHT; i++) {
         for (int j = 0; j < BOARD_WIDTH; j++) {
-            tempBoard[j][i] = board[j][i];
+            tempBoard[i][j] = board[i][j];
         }
     }
 
     // now that we have a copy of the board we now add our tetromino to the current temp board
     for (int x = 0; x < 4; x++) {
         for (int y = 0; y < 4; y++) {
-            if (TETROMINO_SHAPE[tetromino->type][tetromino->rotation][x][y]) {
+            if (TETROMINO_SHAPE[tetromino->type][tetromino->rotation][y][x]) {
                 int boardX = tetromino->x + x;
                 int boardY = tetromino->y + y;
 
-                if (boardX >= 0 && boardX < BOARD_HEIGHT && boardY >= 0 && boardY < BOARD_WIDTH) {
+                if (boardX >= 0 && boardX < BOARD_WIDTH && boardY >= 0 && boardY < BOARD_HEIGHT) {
                     tempBoard[boardY][boardX] = FILLED_CELL; // adding '#' for this
                 }
             }
@@ -525,6 +530,8 @@ void displayGame(s_Tetromino *tetromino) {
         printf("-");
     }
     printf("+\n");
+    printf("DEBUG: Tetromino position: x=%d, y=%d, type=%d, rotation=%d\n", 
+       tetromino->x, tetromino->y, tetromino->type, tetromino->rotation);
 }
 
 // now we need to move the lines, clear the lines:
@@ -537,7 +544,7 @@ int clearLines() {
 
         // now we check if this line is complete 
         for (int x = 0; x < BOARD_WIDTH; x++) {
-            if (board[x][y] == EMPTY_CELL) {
+            if (board[y][x] == EMPTY_CELL) {
                 lineComplete = false;
                 break;
             }
@@ -547,7 +554,7 @@ int clearLines() {
             linesCleared++;
 
             // now we need to move all lines that are above there once the line is cleared we need to move them below
-            for (int moveY = y; moveY > 0; y++) {
+            for (int moveY = y; moveY > 0; moveY--) {
                 for (int x = 0; x < BOARD_WIDTH; x++) {
                     board[moveY][x] = board[moveY - 1][x];
                 }
@@ -609,6 +616,10 @@ int main(void) {
         // now we read the key input we handle the inputs
         if (keybit() == 1) {
             char key = getch();
+             printf("Key pressed: %c\n", key);
+            
+            // Add this line to see debug output before it's cleared
+            // sleep(1); // Wait 1 second after key press
             switch(key) {
                 case 'a': 
                     moveTetrominoLeft(&piece); // moving the tetromino left
@@ -633,11 +644,48 @@ int main(void) {
                             dropSpeed = 500000 / level; // we increase the speed everytime as we reach level
                         }
                         createTetronino(&piece); // we make a new piece now
+                        if (!is_in_valid_position(&piece)) {
+                            gameOver = true; 
+                        }
                     }
+                lastDrop = clock(); // we need to reset the time                   
+                break;
+            case 'q':
+                gameOver = true;
+                break;
             }
         }
 
+        // we also need to autodrop the piece as well
+        clock_t currentTime = clock();
+        if ((currentTime - lastDrop) * 1000000 / CLOCKS_PER_SEC > dropSpeed) {
+            if (!moveTetrominoDown(&piece)) {
+                placeTetromino(&piece);
+                int lines = clearLines();
+                if (lines > 0) {
+                    linesCleared += lines;
+                    score += lines * 100 * level;
+
+                    // level up every 10 lines
+                    level = (linesCleared / 10) + 1;
+                    dropSpeed = 500000 / level;
+                }
+                createTetronino(&piece);
+                if (!is_in_valid_position(&piece)) {
+                    gameOver = true;
+                }
+            }
+            lastDrop = currentTime;
+        }
+        // some delay to help the CPU!
+        usleep(16000);
     }
+    // game over here
+    displayGame(&piece);
+    printf("Game Over! Final Score: %d\n", score);
+
+    // we reset the terminal back
+    resetTerminal();
 
     return 0;
 }
