@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 14:24:57
+* @Last Modified time: 2025-04-13 17:21:11
 */
 
 
@@ -229,7 +229,72 @@ const int TETROMINO_SHAPE[NUM_OF_SHAPES][4][4][4] = {
             {1, 1, 0, 0},
             {0, 1, 0, 0}
         }
+    },
+
+    // adding shape J
+    {
+        // rotation 0 default rotation
+        {
+            {0, 0, 0, 0},
+            {1, 0, 0, 0},
+            {1, 1, 1, 0},
+            {0, 0, 0, 0}
+        },    
+        // rotation 1 
+        {
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {0, 1, 0, 0},
+            {0, 1, 0, 0}
+        },
+        // rotation 2
+        {
+            {},
+            {},
+            {},
+            {}
+        },
+        // rotation 3
+        {
+            {},
+            {},
+            {},
+            {}
+        }
+    },
+
+    // L shape
+    {
+        // rotation 0, default
+        {
+            {},
+            {},
+            {},
+            {}
+        },
+        // rotation 1
+        {
+            {},
+            {},
+            {},
+            {}
+        },
+        // rotation 2
+        {
+            {},
+            {},
+            {},
+            {}
+        },
+        // rotation 3
+        {
+            {},
+            {},
+            {},
+            {}
+        }
     }
+
 }
 
 
