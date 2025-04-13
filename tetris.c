@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 14:13:19
+* @Last Modified time: 2025-04-13 14:19:08
 */
 
 
@@ -22,7 +22,7 @@
 #define BOARD_WIDTH 0
 #define BOARD_HEIGHT 20
 #define EMPTY_CELL ' '
-#define FILLED CELL '#'
+#define FILLED_CELL '#'
 
 // first we need the function for setting up the terminal on mac
 // since the terminal is only used for in the mode where a user types something and then presses the enter key
@@ -164,9 +164,38 @@ const int TETROMINO_SHAPE[NUM_OF_SHAPES][4][4][4] = {
         }
     },
     // now we have the next shape and so forth this is how we do it for 
-    //  
-    {
+    
 
+    // O SHAPE
+    {   
+        // rotation 0, default rotation
+        {
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {0, 1, 1, 0},
+            {0, 0, 0, 0}
+        },
+        // rotation 1
+        {
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {0, 1, 1, 0},
+            {0, 0, 0, 0}
+        },
+        // rotation 2 
+        {
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {0, 1, 1, 0},
+            {0, 0, 0, 0}
+        },
+        // rotation 3
+        {
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {0, 1, 1, 0},
+            {0, 0, 0, 0}
+        }
     }
 }
 
