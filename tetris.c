@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 18:45:39
+* @Last Modified time: 2025-04-13 19:15:04
 */
 
 
@@ -419,7 +419,41 @@ bool is_in_valid_position(s_Tetromino *tetromino) {
 }
 
 // now we need to implement the movement of the tetromino's
+bool moveTetrominoDown(s_Tetromino *tetromino) {
+    tetromino->y++;
+    if (!is_in_valid_position(tetromino)) {
+        tetromino->y--;
+        return false;
+    }
 
+    return true; // here we are done, we can move it
+}
+
+
+bool moveTetrominoLeft(s_Tetromino *tetromino) {
+    tetromino->x--; 
+    if (!is_in_valid_position(tetromino)) {
+        tetromino->x++; // if we can't go left anymore
+        return false;
+    }
+
+    return true;
+}
+
+bool moveTetrominoRight(s_Tetromino *tetromino) {
+    tetromino->x++; // moving right so positive
+    if (!is_in_valid_position(tetromino)) {
+        tetromino->x--;
+        return false;
+    }
+
+    return true;
+}
+
+// now we need to do the tetromino rotations
+bool rotateTetromino(s_Tetromino *tetromino) {
+    
+}
 
 
 
@@ -451,5 +485,3 @@ int main(void) {
 
     return 0;
 }
-
-
