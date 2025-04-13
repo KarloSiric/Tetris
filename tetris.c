@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 17:21:11
+* @Last Modified time: 2025-04-13 18:45:39
 */
 
 
@@ -19,7 +19,7 @@
 #include <errno.h>
 
 // here I define some macros that I will be using in the game
-#define BOARD_WIDTH 0
+#define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
 #define EMPTY_CELL ' '
 #define FILLED_CELL '#'
@@ -40,6 +40,32 @@
  *  So using termios which allows us to disable the echo and to enable the non-canonical mode input
  *  Also using ANSII escape modes
 */
+
+
+/************************** 
+ * Function declarations: *
+ **************************/
+
+void setupTerminal();
+
+void resetTerminal();
+
+int keybit();
+
+int getch();
+
+void initBoard();
+
+
+
+
+
+
+
+
+
+
+
 
 void setupTerminal() {
     struct termios term;
@@ -249,17 +275,17 @@ const int TETROMINO_SHAPE[NUM_OF_SHAPES][4][4][4] = {
         },
         // rotation 2
         {
-            {},
-            {},
-            {},
-            {}
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {1, 1, 1, 0},
+            {0, 0, 1, 0}
         },
         // rotation 3
         {
-            {},
-            {},
-            {},
-            {}
+            {0, 0, 0, 0},
+            {0, 1, 0, 0},
+            {0, 1, 0, 0},
+            {1, 1, 0, 0}
         }
     },
 
@@ -267,36 +293,132 @@ const int TETROMINO_SHAPE[NUM_OF_SHAPES][4][4][4] = {
     {
         // rotation 0, default
         {
-            {},
-            {},
-            {},
-            {}
+            {0, 0, 0, 0},
+            {0, 0, 1, 0},
+            {1, 1, 1, 0},
+            {0, 0, 0, 0}
         },
         // rotation 1
         {
-            {},
-            {},
-            {},
-            {}
+            {0, 0, 0, 0},
+            {0, 1, 0, 0},
+            {0, 1, 0, 0},
+            {0, 1, 1, 0}
         },
         // rotation 2
         {
-            {},
-            {},
-            {},
-            {}
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {1, 1, 1, 0},
+            {1, 0, 0, 0}
         },
         // rotation 3
         {
-            {},
-            {},
-            {},
-            {}
+            {0, 0, 0, 0},
+            {1, 1, 0, 0},
+            {0, 1, 0, 0},
+            {0, 1, 0, 0}
+        }
+    },
+
+    // S shape
+    {
+        // rotation 0 default one
+        {
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {1, 1, 0, 0},
+            {0, 0, 0, 0}
+        },
+        // rotation 1
+        {
+            {0, 0, 0, 0},
+            {0, 1, 0, 0},
+            {0, 1, 1, 0},
+            {0, 0, 1, 0}
+        },
+        // rotation 2
+        {
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {0, 1, 1, 0},
+            {1, 1, 0, 0}
+        },
+    // Rotation 3
+        {
+            {0, 0, 0, 0},
+            {1, 0, 0, 0},
+            {1, 1, 0, 0},
+            {0, 1, 0, 0}
+        }
+    },
+
+    // Z Shape
+    {
+            // Rotation 0
+        {
+            {0, 0, 0, 0},
+            {1, 1, 0, 0},
+            {0, 1, 1, 0},
+            {0, 0, 0, 0}
+        },
+        // Rotation 1
+        {
+            {0, 0, 0, 0},
+            {0, 0, 1, 0},
+            {0, 1, 1, 0},
+            {0, 1, 0, 0}
+        },
+        // Rotation 2
+        {
+            {0, 0, 0, 0},
+            {0, 0, 0, 0},
+            {1, 1, 0, 0},
+            {0, 1, 1, 0}
+        },
+        // Rotation 3
+        {
+            {0, 0, 0, 0},
+            {0, 1, 0, 0},
+            {1, 1, 0, 0},
+            {1, 0, 0, 0}
         }
     }
+};
 
+// lets now make a function where we actually make a new tetromino
+void createTetronino(s_Tetromino *tetromino) {
+    tetromino->type = rand() % NUM_OF_SHAPES; // here we decide which type it is going to be, something randomlly of course
+    tetromino->rotation = 0; // initially it is set to 0
+    tetromino->x = BOARD_WIDTH / 2 - 2; // this is needed in order to center the tetromino whichever we will be using.
+    tetromino->y = 0; // we start at the very top of the board
 }
 
+// we also need a function which checks whether this tetromino is in the right position
+bool is_in_valid_position(s_Tetromino *tetromino) {
+    for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < 4; y++) {
+            // we make a tetromino and we check if this one exists
+            if (TETROMINO_SHAPE[tetromino->type][tetromino->rotation][tetromino->x][tetromino->y]) { // if it is a valid one, type and rotation will be passed when we create the piece
+                int boardX = tetromino->x + x;
+                int boardY = tetromino->y + y;
+                // we check if it is outside of the board and so forth...
+                if (boardX < 0 || boardX >= BOARD_WIDTH || boardY < 0 || boardY >= BOARD_HEIGHT) {
+                    return false;
+                }
+                // now we check if it is overlapping with some existing blocks on the board already
+                if (board[boardX][boardY] != EMPTY_CELL) {
+                    return false; // position is invalid, we have a collision
+                }
+
+            }
+        }
+    }
+    // if we got to this part so far, that means 
+    return true;
+}
+
+// now we need to implement the movement of the tetromino's
 
 
 
@@ -323,9 +445,8 @@ const int TETROMINO_SHAPE[NUM_OF_SHAPES][4][4][4] = {
 
 
 
-int main(int argc, char const *argv[])
-{
-        
+
+int main(void) {
 
 
     return 0;
