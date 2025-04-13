@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 19:15:04
+* @Last Modified time: 2025-04-13 19:33:21
 */
 
 
@@ -126,7 +126,7 @@ int getch() {
 //this will be our game board
 char board[BOARD_HEIGHT][BOARD_WIDTH]; 
 
-// now we initialize that board and set it all to empty, we populat the board
+// now we initialize that board and set it all to empty, we populate the board
 void initBoard() {
     for (int x = 0; x < BOARD_HEIGHT; x++) {
         for (int y = 0; y < BOARD_WIDTH; y++) {
@@ -452,8 +452,42 @@ bool moveTetrominoRight(s_Tetromino *tetromino) {
 
 // now we need to do the tetromino rotations
 bool rotateTetromino(s_Tetromino *tetromino) {
-    
+    int defaultRotation = tetromino->rotation; // this is the rotation that we have once the tetromino spawns
+    int newRotation = (tetromino->rotation + 1) % 4; // since we have 4 rotations this ensures that we get a new one, so for example this let's us get rotations from 0 to 3
+    if (!is_in_valid_position(tetromino)) {
+        newRotation = defaultRotation;
+        return false;
+    }
+
+    return true;
 }
+
+void placeTetromino(s_Tetromino *tetromino) {
+    for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < 4; y++) {
+            if(TETROMINO_SHAPE[tetromino->type][tetromino->rotation][x][y]) {
+                int boardX = tetromino->x + x;
+                int boardY = tetromino->y + y;
+                board[boardX][boardY];
+            }
+        }
+    }
+}
+
+
+// now we need to add a function to display the game itself in the first place
+void displayGame(s_Tetromino *tetromino) {
+    // now we need to use ANSI escape codes since we are using the terminal and first we will clear the terminal
+    printf("\033[H\033[J"); // this is the ANSI escape code for making and clearing the space
+
+    // now lets make a board with the tetromino
+    char tempBoard[BOARD_HEIGHT][BOARD_WIDTH];
+
+
+
+}
+
+
 
 
 
