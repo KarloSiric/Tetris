@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 19:33:21
+* @Last Modified time: 2025-04-13 20:27:11
 */
 
 
@@ -410,7 +410,6 @@ bool is_in_valid_position(s_Tetromino *tetromino) {
                 if (board[boardX][boardY] != EMPTY_CELL) {
                     return false; // position is invalid, we have a collision
                 }
-
             }
         }
     }
@@ -468,7 +467,7 @@ void placeTetromino(s_Tetromino *tetromino) {
             if(TETROMINO_SHAPE[tetromino->type][tetromino->rotation][x][y]) {
                 int boardX = tetromino->x + x;
                 int boardY = tetromino->y + y;
-                board[boardX][boardY];
+                board[boardY][boardX];
             }
         }
     }
@@ -483,39 +482,162 @@ void displayGame(s_Tetromino *tetromino) {
     // now lets make a board with the tetromino
     char tempBoard[BOARD_HEIGHT][BOARD_WIDTH];
 
+    // we make a copy of the board now
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            tempBoard[j][i] = board[j][i];
+        }
+    }
 
+    // now that we have a copy of the board we now add our tetromino to the current temp board
+    for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < 4; y++) {
+            if (TETROMINO_SHAPE[tetromino->type][tetromino->rotation][x][y]) {
+                int boardX = tetromino->x + x;
+                int boardY = tetromino->y + y;
 
+                if (boardX >= 0 && boardX < BOARD_HEIGHT && boardY >= 0 && boardY < BOARD_WIDTH) {
+                    tempBoard[boardY][boardX] = FILLED_CELL; // adding '#' for this
+                }
+            }
+        }
+    }
+
+    // now once we filled this tetromino with the elements we now draw the border finally
+    printf("+");
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        printf("-");
+    }
+    printf("+\n");
+
+    // now the left vertical lines
+    for(int y = 0; y < BOARD_HEIGHT; y++) {
+        printf("|");
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            printf("%c", tempBoard[y][x]); // this line here prints either a space or '#' and it fills the board with the element
+        }
+        printf("|\n"); // at the end it prints one vertical line at the end 
+    }
+
+    // now we draw the bottom border
+    printf("+");
+    for (int x = 0; x < BOARD_WIDTH; x++) { // we need here x
+        printf("-");
+    }
+    printf("+\n");
 }
 
+// now we need to move the lines, clear the lines:
+int clearLines() {
+    int linesCleared = 0;
 
+    // start from way down below
+    for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
+        bool lineComplete = true;
 
+        // now we check if this line is complete 
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (board[x][y] == EMPTY_CELL) {
+                lineComplete = false;
+                break;
+            }
+        }
 
+        if (lineComplete) {
+            linesCleared++;
 
+            // now we need to move all lines that are above there once the line is cleared we need to move them below
+            for (int moveY = y; moveY > 0; y++) {
+                for (int x = 0; x < BOARD_WIDTH; x++) {
+                    board[moveY][x] = board[moveY - 1][x];
+                }
+            }
 
+            // we need to clear the top line now
+            for (int x = 0; x < BOARD_WIDTH; x++) {
+                board[0][x] = EMPTY_CELL;
+            }
+            y++;
+        }
+    }
 
+    return linesCleared;
+}
 
+// now we implement the conditional statement for the game itself and this is if the game will be over or not
+bool isGameOver() {
+    // if there are filled cells in the top row the game is over that is one condition, now let's write it
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        if (board[0][x] != EMPTY_CELL) {
+            return true;
+        } 
+    }
 
+    return false;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// now we are left wiht the main function of the game and we are done
 
 int main(void) {
 
+    // first let's initialize the random seed
+    srand(time(NULL));
+    // we setup the terminal
+    setupTerminal();
+    // we initialize the board
+    initBoard();
+
+    s_Tetromino piece;
+    createTetronino(&piece); // now we make that piece 
+
+    // we initializet the score board:
+    int score = 0;
+    int level = 1;
+    int linesCleared = 0;
+    int dropSpeed = 500000; // this is in microseconds so this is 0.5 seconds
+    bool gameOver = false;
+
+    // we set the timer for pieces to drop
+    clock_t lastDrop = clock();
+    // now we loop the game itself
+    while(!gameOver) {
+        displayGame(&piece);
+
+        // we print the game info:
+        printf("Score: %d Level: %d Lines: %d\n", score, level, linesCleared);
+        printf("Controls: A/D - Move; W - Rotate; S - Drop; Q - Quit\n");
+        // now we read the key input we handle the inputs
+        if (keybit() == 1) {
+            char key = getch();
+            switch(key) {
+                case 'a': 
+                    moveTetrominoLeft(&piece); // moving the tetromino left
+                    break;
+                case 'd':
+                    moveTetrominoRight(&piece); // moving the tetromino right
+                    break;
+                case 'w':
+                    rotateTetromino(&piece); // rotating the tetromino
+                    break;
+                case 's':
+                    // this is for moving down
+                    if (!moveTetrominoDown(&piece)) {
+                        placeTetromino(&piece);
+                        int lines = clearLines();
+                        if (lines > 0) {
+                            linesCleared += lines;
+                            score += lines * 100 * level; // this is the algorithm I am going for for loading the score
+
+                            // we need to level up every 10 lines we reach a new level
+                            level = (linesCleared / 10) + 1; // so this is important because if we go from anything below 10 lines level stays the same
+                            dropSpeed = 500000 / level; // we increase the speed everytime as we reach level
+                        }
+                        createTetronino(&piece); // we make a new piece now
+                    }
+            }
+        }
+
+    }
 
     return 0;
 }
