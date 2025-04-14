@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-13 21:06:53
+* @Last Modified time: 2025-04-14 09:46:54
 */
 
 
@@ -45,27 +45,6 @@
 /************************** 
  * Function declarations: *
  **************************/
-
-void setupTerminal();
-
-void resetTerminal();
-
-int keybit();
-
-int getch();
-
-void initBoard();
-
-
-
-
-
-
-
-
-
-
-
 
 void setupTerminal() {
     struct termios term;
