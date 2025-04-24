@@ -2,7 +2,7 @@
 * @Author: karlosiric
 * @Date:   2025-04-13 11:08:27
 * @Last Modified by:   karlosiric
-* @Last Modified time: 2025-04-14 09:46:54
+* @Last Modified time: 2025-04-18 00:05:45
 */
 
 
@@ -17,6 +17,8 @@
 #include <termios.h> // since I am on macOS I need this for terminal controlling
 #include <fcntl.h>  
 #include <errno.h>
+
+
 
 // here I define some macros that I will be using in the game
 #define BOARD_WIDTH 20
@@ -78,7 +80,6 @@ void resetTerminal() {
 // we make a function for checking if a key is pressed in the terminal in the first place
 
 */
-
 int keybit() {
     char ch;
     int bytes = read(0, &ch, 1); 
